@@ -99,20 +99,7 @@ Discipline:
 - Base everything on real evidence; never fabricate requests, responses, CVEs, or conclusions. Mark insufficient evidence as unverified / needs further confirmation.
 - Remediation-oriented and verifiable.
 - Concise: no boilerplate, do not restate the template.
-- Write everything in English. Once update_finding_report succeeds, finish with a sentence or two naming which vulnerability you reported.` + "`## 概述`" + `：一句话说清是什么漏洞、在哪、能造成什么。
-- ` + "`## 影响与危害`" + `：结合业务讲清最坏后果（数据泄露/接管/RCE/横向…），给出**严重等级**判断及理由。
-- ` + "`## 受影响范围`" + `：受影响的资产/接口/参数/版本。
-- ` + "`## 复现步骤`" + `：**可照做复现**的分步操作（请求/命令/参数），能贴 PoC 就贴。
-- ` + "`## 证据`" + `：证明漏洞真实存在的关键请求/响应片段、命令输出、回显、截图说明——用代码块贴原文。
-- ` + "`## PoC`" + `：可直接运行/复用的利用代码或 payload（利用脚本、请求报文、命令行、payload 串），**通常以代码块给出完整代码**，并简述如何运行；无独立利用代码时说明"复现步骤即为 PoC"。
-- ` + "`## 根因分析`" + `：为什么会有这个漏洞（缺校验/危险函数/配置错误…）。
-- ` + "`## 修复建议`" + `：具体、可落地的整改措施（不是空话），可含加固与长期建议。
-
-━━ 纪律 ━━
-- **只基于真实证据**：报告里的每一条都要能从 finding 证据或 work 执行过程里找到支撑；**绝不臆造**请求、响应、CVE 或结论。证据不足的地方如实标注"未验证/需进一步确认"。
-- **面向修复、可核验**：复现步骤要能照做，修复建议要能落地。
-- **精炼**：不写套话废话、不复述模板本身。
-- 全程**中文**。做完（已成功调用 update_finding_report）就结束，用一两句话说明你为哪个漏洞写了报告即可。`
+- Write everything in English. Once update_finding_report succeeds, finish with a sentence or two naming which vulnerability you reported.` + "`## Overview`" + ": state in one sentence what the vulnerability is, where it is, and what it can cause.\r\n- " + "`## Impact & Harm`" + ": explain the worst-case consequences in business terms (data breach / takeover / RCE / lateral movement…), and give a **severity** judgment with reasoning.\r\n- " + "`## Affected Scope`" + ": the affected assets / endpoints / parameters / versions.\r\n- " + "`## Reproduction Steps`" + ": step-by-step operations that **can be followed to reproduce** (requests / commands / parameters); paste a PoC whenever possible.\r\n- " + "`## Evidence`" + ": the key request/response snippets, command output, echoes, and screenshot notes that prove the vulnerability is real — paste the originals in code blocks.\r\n- " + "`## PoC`" + ": exploit code or payloads that can be run/reused directly (exploit scripts, request messages, command lines, payload strings), **usually given as complete code in a code block**, with a brief note on how to run it; when there is no standalone exploit code, state that \"the reproduction steps are the PoC\".\r\n- " + "`## Root Cause Analysis`" + ": why this vulnerability exists (missing validation / dangerous function / misconfiguration…).\r\n- " + "`## Remediation`" + ": concrete, actionable remediation measures (not platitudes), which may include hardening and long-term recommendations.\r\n\r\n━━ Discipline ━━\r\n- **Base everything on real evidence**: every item in the report must be traceable to finding evidence or the work's execution process; **never fabricate** requests, responses, CVEs, or conclusions. Where evidence is insufficient, mark it honestly as \"unverified / needs further confirmation\".\r\n- **Fix-oriented and verifiable**: reproduction steps must be followable and remediation must be actionable.\r\n- **Concise**: no boilerplate or filler, and do not restate the template itself.\r\n- Write entirely in **English**. Once done (update_finding_report called successfully), finish with a sentence or two naming which vulnerability you wrote the report for."
 
 // BuiltinPromptSeeds returns each built-in agent's default EDITABLE prompt body
 // keyed by agent key. The server seeds these into agent_prompts on startup (only

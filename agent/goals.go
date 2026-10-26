@@ -50,21 +50,7 @@ Call set_goals to submit the result.`
 // also lift the explicit asset scope out of the goal/description and register it
 // via add_task_scope. Kept in code (not the DB-editable body) so it always applies
 // on released DBs and can't be edited away — same pattern as the trafficTool tail.
-const goalsScopeTail = `
-
-**额外职责：登记测试资产范围**
-除拆分目标外，你还要从「任务目标 / 任务描述」里识别出**明确给出的测试资产范围**，调用 add_task_scope 登记（本任务的授权边界，也是资产测试覆盖度的分母）。**最小范围原则：只登记用户明确点到的那一个目标，绝不擅自放大。**
-- 目标是 URL 或带主机名的地址（如 https://xxx.example.com/path、app.example.com）→ 取其**完整主机名**，kind=subdomain，value=完整主机名。
-  例：目标 https://a1b2c3.lab.example.net/path → kind=subdomain，value=a1b2c3.lab.example.net（**不是** example.net）。
-  **严禁**把带子域的主机名缩成根域名——看到 xxx.example.com 就登记整个 example.com 会把范围扩到用户目标之外，违背最小范围原则。
-- 仅当用户给的就是**裸根域名、且不含任何子域**（如直接写 example.com），或明确说“整个站点 / 所有子域 / 全域名” → 才用 kind=root_domain，value=example.com。
-- 纯 IP 或网段 → kind=ip / cidr，value=IP 或 CIDR。
-- **不要**登记公司范围（company）——任务刚建立、资产系统里通常还没有这家公司，登记不上，公司级范围交由后续 plan 阶段处理。
-其它规则：
-- 只登记**目标/描述里明确写出**的范围；严禁臆造或推断未提及的域名/IP。
-- reason 简述依据来自哪句话，便于审计。
-- 若目标/描述中没有任何明确资产范围，则**不要**调用 add_task_scope。
-先用 add_task_scope 登记范围（如有），再调用 set_goals 提交目标。`
+const goalsScopeTail = "\r\n\r\n**Additional duty: register the test asset scope**\r\nBesides decomposing the goals, you must also identify the **explicitly given test asset scope** from the \"task goal / task description\" and register it via add_task_scope (the task's authorization boundary, and the denominator of asset test coverage). **Minimal-scope principle: register only the single target the user explicitly pointed to; never widen it on your own.**\r\n- If the target is a URL or an address with a hostname (e.g. https://xxx.example.com/path, app.example.com) → take its **full hostname**, kind=subdomain, value=the full hostname.\r\n  Example: target https://a1b2c3.lab.example.net/path → kind=subdomain, value=a1b2c3.lab.example.net (**not** example.net).\r\n  **Never** shrink a hostname that has a subdomain down to the root domain — registering the whole example.com upon seeing xxx.example.com widens the scope beyond the user's target and violates the minimal-scope principle.\r\n- Only when the user gives a **bare root domain with no subdomain** (e.g. writes example.com directly), or explicitly says \"the whole site / all subdomains / the entire domain\" → use kind=root_domain, value=example.com.\r\n- Pure IP or network block → kind=ip / cidr, value=the IP or CIDR.\r\n- **Do not** register a company scope (company) — the task was just created and this company usually does not exist in the asset system yet, so it cannot be registered; leave company-level scope to the later plan phase.\r\nOther rules:\r\n- Register only the scope **explicitly written** in the goal/description; never invent or infer domains/IPs not mentioned.\r\n- In reason, briefly note which sentence it is based on, for auditing.\r\n- If the goal/description contains no explicit asset scope, **do not** call add_task_scope.\r\nFirst register the scope with add_task_scope (if any), then submit the goals with set_goals."
 
 // goalsSystem assembles the goals-decomposer system prompt: the rendered body
 // [A] (DB-overridable), the code-owned scope-extraction tail when add_task_scope
@@ -153,9 +139,9 @@ func DecomposeGoalsWithProvider(ctx context.Context, prov llm.Provider, dataDir,
 	if withScope {
 		tools = append(tools, tsx.addTaskScope())
 	}
-	userMsg := "任务目标：\n" + goalText
+	userMsg := "Task goal:\n" + goalText
 	if d := strings.TrimSpace(desc); d != "" {
-		userMsg += "\n\n任务描述（背景信息，可能含靶标范围/flag 数量/交战说明；仅供参考，不要臆造其中未提及的内容）：\n" + d
+		userMsg += "\n\nTask description (background information, may include target scope / number of flags / rules of engagement; for reference only — do not invent anything not mentioned in it):\n" + d
 	}
 	// Use captureRun so every LLM step is emitted as an activity record (visible in
 	// the plan tab under the round-0 marker). Falls back gracefully when emit is nil.
