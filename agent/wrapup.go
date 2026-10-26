@@ -41,11 +41,11 @@ var wrapupTurnDefaults = map[string]int{
 
 const genericWrapupTurns = 10
 
-const plannerWrapUpDefault = "이번 계획 라운드의 단계 예산이 곧 소진됩니다. 다만 【이번 라운드】만 끝나는 것이며, 시스템은 이후에도 상황 변화에 따라 당신을 다시 깨워 계획을 이어가게 합니다. 작업 자체가 끝나는 것이 아니므로 여기서 전체 계획을 마무리 지을 필요는 없습니다. 이번 라운드에서 이미 명확히 판단한 결론은 실제로 반영하여 이번 라운드가 헛되지 않게 하되, 【마무리를 위해 억지로 의도를 지어내지는】 마십시오(이번 라운드에 의도가 0개인 것도 완전히 정상적인 결과입니다). (1) 【지금 바로 파견해야 할】 탐색 방향을 이미 판단했다면 add_intent 한 번으로 묶어서 제출합니다(이미 정한 것은 묵히지 말고 바로 보냅니다). (2) 어떤 발견이나 사실로 이미 달성이 증명된 목표는 prove_goal 로 met 표시합니다(빠뜨리지 마십시오). (3) 단계를 나눠야 하는 직렬 익스플로잇 체인을 식별했다면 TodoWrite 로 기록하여 다음에 깨어났을 때 이어서 파견할 수 있게 합니다. 다 끝냈으면 이번 라운드를 바로 종료하며, 요약 텍스트는 출력하지 않습니다."
+const plannerWrapUpDefault = "The step budget of this planning round is nearly exhausted. However, only [this round] ends; the system will still wake you again later as the situation changes to continue planning. The task itself is not ending, so there is no need to wrap up the whole plan here. Reflect the conclusions you have already clearly judged this round so that this round is not wasted, but [do not force-invent intents just to wrap up] (0 intents this round is a completely normal result). (1) If you have already judged exploration directions that [must be dispatched right now], submit them in a single add_intent call (do not sit on what you have already decided, send it immediately). (2) For goals already proven achieved by some finding or fact, mark them met with prove_goal (do not miss any). (3) If you have identified a serial exploitation chain that must be split into steps, record it with TodoWrite so you can continue dispatching when you wake next time. Once done, end this round immediately, and do not output any summary text."
 
-const mainAgentWrapUpDefault = "단계 예산이 곧 소진되어 이번 상호작용이 끝나려 합니다. 더 이상 새로운 탐색이나 조작을 시작하지 마십시오. **한 문장짜리 순수 텍스트로만** 현재 진행 상황, 핵심 결론, 그리고 권장하는 다음 단계를 사용자에게 한국어로 요약하십시오."
+const mainAgentWrapUpDefault = "The step budget is nearly exhausted and this interaction is about to end. Do not start any new exploration or operation. **In a single plain-text sentence only**, summarize for the user in English the current progress, the key conclusion, and the recommended next step."
 
-const genericWrapUpDefault = "예산 소진으로 곧 종료됩니다. 먼저 완료했지만 아직 저장하지 않은 결과를 기록한 뒤, **한 문장짜리 순수 텍스트로만** 무엇을 했고 어떤 핵심 결론을 얻었는지 한국어로 요약하십시오(이 한 문장이 이번 실행의 결과로 표시됩니다)."
+const genericWrapUpDefault = "The budget is nearly exhausted and this run will end soon. First record any results you have completed but not yet saved, then, **in a single plain-text sentence only**, summarize in English what you did and what key conclusion you reached (this one sentence is shown as the result of this run)."
 
 // WrapupDefault returns the built-in default wrap-up prompt for an agent key —
 // used by the admin UI as the "restore default" value and empty-field placeholder.
